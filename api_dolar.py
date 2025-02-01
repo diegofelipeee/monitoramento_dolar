@@ -16,7 +16,7 @@ except LookupError:
 
 app = Flask(__name__)
 
-GNEWS_API_KEY = "4a36b3c6c359b7fb0e7ef185b54cc5c7"  # Chave da GNews API
+GNEWS_API_KEY = "Sua_API_KEY"  # Chave da GNews API
 CACHE_NOTICIAS = {"data": None, "expira_em": None}
 
 # Inicialize o analisador de sentimento
