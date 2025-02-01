@@ -1,4 +1,5 @@
 📈 Monitoramento do Dólar em Tempo Real
+
 Este projeto é uma aplicação web desenvolvida com Flask que permite acompanhar a cotação do dólar em tempo real, analisar o sentimento das notícias relacionadas e até mesmo fazer uma previsão do câmbio usando regressão linear.
 
 🚀 Funcionalidades
