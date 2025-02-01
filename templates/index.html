@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento do Dólar</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --border-color: #ddd;
+            --positive-color: green;
+            --negative-color: red;
+        }
+
+        body.dark {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --border-color: #444;
+            --positive-color: lightgreen;
+            --negative-color: lightcoral;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .positivo {
+            color: var(--positive-color);
+            font-weight: bold;
+        }
+
+        .negativo {
+            color: var(--negative-color);
+            font-weight: bold;
+        }
+
+        .chart-container, .news-container {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: var(--border-color);
+        }
+
+        .noticia-item {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .alerta {
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .loading {
+            font-style: italic;
+            color: gray;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: var(--border-color);
+            color: var(--text-color);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="toggleTheme">Alternar Tema</button>
+    <div class="container">
+        <!-- Gráfico do Dólar em Tempo Real -->
+        <div class="chart-container">
+            <h1>Monitoramento do Valor do Dólar</h1>
+            <canvas id="graficoDolar"></canvas>
+            <h2 id="alertaDolar" class="alerta"></h2>
+        </div>
+
+        <!-- Gráfico do Histórico do Dólar -->
+        <div class="chart-container">
+            <h2>Histórico do Dólar nos Últimos 7 Dias</h2>
+            <canvas id="graficoHistorico"></canvas>
+            <h2 id="variacaoGeral"></h2>
+        </div>
+
+        <!-- Previsões do Dólar -->
+        <div class="chart-container">
+            <h2>Previsões para os Próximos 7 Dias</h2>
+            <table id="previsoesDolar">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Valor Previsto (R$)</th>
+                        <th>Probabilidade (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="loading">
+                        <td colspan="3">Carregando previsões...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Probabilidades de Valores Alvo -->
+        <div class="chart-container">
+            <h2>Probabilidades de Atingir Valores Alvo</h2>
+            <ul id="probabilidadesAlvo" class="probabilidade-alvo">
+                <li class="loading">Carregando probabilidades...</li>
+            </ul>
+        </div>
+
+        <!-- Notícias sobre Alta do Dólar -->
+        <div class="news-container">
+            <h2>Notícias sobre Alta do Dólar</h2>
+            <div id="noticiasAltaDolar">
+                <p class="loading">Carregando notícias...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const localStorageKey = 'historicoDolar';
+        const historicoDolarLocal = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+
+        const ctxDolar = document.getElementById('graficoDolar').getContext('2d');
+        const graficoDolar = new Chart(ctxDolar, {
+            type: 'line',
+            data: {
+                labels: historicoDolarLocal.map(item => item.timestamp),
+                datasets: [{
+                    label: 'Dólar',
+                    data: historicoDolarLocal.map(item => item.valor),
+                    borderColor: 'blue',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'blue',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+
+        const ctxHistorico = document.getElementById('graficoHistorico').getContext('2d');
+        const graficoHistorico = new Chart(ctxHistorico, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Histórico do Dólar',
+                    data: [],
+                    borderColor: 'green',
+                    borderWidth: 2,
+                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                    pointBackgroundColor: 'green',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: true,
+                scales: {
+                    x: {
+                        reverse: true
+                    }
+                }
+            }
+        });
+
+        function atualizarDados() {
+            fetch("/dados")
+                .then(response => response.json())
+                .then(data => {
+                    graficoDolar.data.labels.push(data.timestamp);
+                    graficoDolar.data.datasets[0].data.push(data.dolar);
+                    graficoDolar.update();
+
+                    historicoDolarLocal.push({ timestamp: data.timestamp, valor: data.dolar });
+                    if (historicoDolarLocal.length > 10) historicoDolarLocal.shift();
+                    localStorage.setItem(localStorageKey, JSON.stringify(historicoDolarLocal));
+
+                    const variacao = data.variacao_percentual;
+                    const historico = data.historico;
+                    graficoHistorico.data.labels = historico.map(item => item.data);
+                    graficoHistorico.data.datasets[0].data = historico.map(item => item.valor);
+                    graficoHistorico.data.datasets[0].borderColor = variacao > 0 ? 'red' : 'green';
+                    graficoHistorico.data.datasets[0].pointBackgroundColor = variacao > 0 ? 'red' : 'green';
+                    graficoHistorico.update();
+
+                    document.getElementById("variacaoGeral").innerHTML = `
+                        Variação Geral nos últimos 7 dias: 
+                        <span class="${variacao >= 0 ? 'negativo' : 'positivo'}">
+                            ${variacao}%</span>`;
+                    
+                    const probabilidadesDiv = document.getElementById("probabilidadesAlvo");
+                    probabilidadesDiv.innerHTML = Object.entries(data.probabilidades).map(
+                        ([key, value]) => `
+                            <li>Probabilidade de atingir R$ ${key}: 
+                                <span class="${value >= 50 ? 'negativo' : 'positivo'}">
+                                    ${value.toFixed(2)}%</span>
+                            </li>`
+                    ).join('');
+
+                    const noticiasDiv = document.getElementById("noticiasAltaDolar");
+                    noticiasDiv.innerHTML = data.noticias_alta_dolar.map(noticia => `
+                        <div class="noticia-item">
+                            <h3>${noticia.titulo}</h3>
+                            <p>Fonte: ${noticia.fonte} | Publicado em: ${new Date(noticia.data_publicacao).toLocaleDateString('pt-BR')}</p>
+                            <a href="${noticia.link}" target="_blank">Leia mais</a>
+                        </div>
+                    `).join('');
+
+                    const alertaDolarDiv = document.getElementById("alertaDolar");
+                    alertaDolarDiv.textContent = data.status_mercado === 'negativo' ? 
+                        "⚠️ Problemas fiscais ou crise financeira" : "✅ Mercado estável";
+                    alertaDolarDiv.className = data.status_mercado === 'negativo' ? 'negativo' : 'positivo';
+                })
+                .catch(error => console.error("Erro ao atualizar os dados:", error));
+        }
+
+        function atualizarPrevisoes() {
+            fetch("/previsao_dolar")
+                .then(response => response.json())
+                .then(data => {
+                    const previsoes = data.previsoes;
+                    const previsoesTable = document.getElementById('previsoesDolar').querySelector('tbody');
+                    previsoesTable.innerHTML = previsoes.map(previsao => `
+                        <tr>
+                            <td>${previsao.dia}</td>
+                            <td>${previsao.valor.toFixed(2)}</td>
+                            <td>${previsao.probabilidade || 'N/A'}%</td>
+                        </tr>`).join('');
+                })
+                .catch(error => console.error("Erro ao atualizar previsões:", error));
+        }
+
+        // Alternar Tema
+        const toggleThemeButton = document.getElementById('toggleTheme');
+        toggleThemeButton.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+        });
+
+        setInterval(atualizarDados, 60000);
+        setInterval(atualizarPrevisoes, 30000);
+        atualizarDados();
+        atualizarPrevisoes();
+    </script>
+</body>
+</html>
