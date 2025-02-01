@@ -12,13 +12,16 @@ Busca notícias sobre economia utilizando a API da GNews.
 Analisa o sentimento (positivo, negativo ou neutro) com NLTK (VADER Sentiment Analysis).
 
 Predição do câmbio 🔮
+
 Utiliza regressão linear (Scikit-Learn) para tentar prever tendências futuras da cotação.
 
 Interface Web e API 🌍
+
 Exibe os dados de forma amigável em uma página HTML.
 Oferece uma API JSON para consumo dos dados.
 
 🛠️ Tecnologias utilizadas
+
 Python + Flask (para a API e interface web)
 BeautifulSoup + Requests (para web scraping da cotação)
 NLTK (para análise de sentimento de notícias)
@@ -26,6 +29,7 @@ Scikit-Learn (Linear Regression) (para previsão de preços)
 HTML + CSS (Templates Flask)
 
 🎯 Como usar
+
 Clone este repositório:
 
 bash
