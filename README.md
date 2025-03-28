@@ -32,9 +32,7 @@ HTML + CSS (Templates Flask)
 
 Clone este repositório:
 
-bash
-Copiar
-Editar
+
 git clone https://github.com/seu-usuario/monitoramento-dolar.git
 cd monitoramento-dolar
 Instale as dependências:
@@ -51,10 +49,10 @@ Editar
 python api_dolar.py
 Acesse no navegador:
 
-cpp
-Copiar
-Editar
+
 http://127.0.0.1:5000
+
+
 📌 Observações
 O projeto requer uma API Key da GNews para buscar notícias (substituir no código).
 Para análise de sentimento, pode ser necessário baixar os dados do NLTK.
