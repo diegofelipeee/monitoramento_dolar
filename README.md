@@ -54,5 +54,7 @@ http://127.0.0.1:5000
 
 
 📌 Observações
+
+
 O projeto requer uma API Key da GNews para buscar notícias (substituir no código).
 Para análise de sentimento, pode ser necessário baixar os dados do NLTK.
